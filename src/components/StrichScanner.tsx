@@ -1,6 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { BarcodeReader, StrichSDK, CodeDetection } from '@pixelverse/strichjs-sdk';
 
+const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNjIwY2IyOC05OWU4LTRlZjMtODRmYy0zMTE2ZjQ0NmViYTQiLCJpc3MiOiJzdHJpY2guaW8iLCJhdWQiOlsiaHR0cHM6Ly9rYWxlaWRvc2NvcGljLW1vdXNzZS01YmVjNDkubmV0bGlmeS5hcHAvIl0sImlhdCI6MTczMTQ5MDE3MiwibmJmIjoxNzMxNDkwMTcyLCJjYXBhYmlsaXRpZXMiOnt9LCJ2ZXJzaW9uIjoxfQ.nt1dZbvE2ckvGnDH4kkQtCkDiUSLc9VwscCWGusfJ9s';
+
 type StrichScannerProps = {
     onDetected?: (detections: CodeDetection[]) => void;
 }
@@ -29,8 +31,7 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
                 return;
             }
             try {
-                console.log(import.meta.env.VITE_STRICH_API_KEY);
-                await StrichSDK.initialize(import.meta.env.VITE_STRICH_API_KEY);
+                await StrichSDK.initialize(key);
                 setSdkInitialized(true);
             } catch (e) {
                 console.error(`Failed to initialize STRICH SDK: ${e}`);

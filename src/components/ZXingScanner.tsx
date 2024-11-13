@@ -4,16 +4,30 @@ import { BrowserMultiFormatReader } from '@zxing/library'
 const ZXingScanner: React.FC = () => {
   const [result, setResult] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState<string>('');
   const codeReader = new BrowserMultiFormatReader();
+
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        const devices = await codeReader.listVideoInputDevices();
+        setVideoDevices(devices);
+        if (devices.length > 0) {
+          setSelectedDevice(devices[0].deviceId);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadDevices();
+  }, []);
 
   const startScanning = async () => {
     try {
       setIsScanning(true);
-      const videoInputDevices = await codeReader.listVideoInputDevices();
-      const selectedDeviceId = videoInputDevices[1].deviceId;
-      
       codeReader.decodeFromVideoDevice(
-        selectedDeviceId,
+        selectedDevice,
         'video-element',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (result: any, err: Error | undefined) => {
@@ -46,7 +60,18 @@ const ZXingScanner: React.FC = () => {
 
   return (
     <div className="scanner">
-        <h1>ZXing</h1>
+      <h1>ZXing</h1>
+      <select 
+        value={selectedDevice}
+        onChange={(e) => setSelectedDevice(e.target.value)}
+        disabled={isScanning}
+      >
+        {videoDevices.map(device => (
+          <option key={device.deviceId} value={device.deviceId}>
+            {device.label || `Camera ${device.deviceId}`}
+          </option>
+        ))}
+      </select>
       <button 
         onClick={isScanning ? stopScanning : startScanning}
       >

@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { BarcodeReader, StrichSDK, CodeDetection } from '@pixelverse/strichjs-sdk';
 
-const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNjIwY2IyOC05OWU4LTRlZjMtODRmYy0zMTE2ZjQ0NmViYTQiLCJpc3MiOiJzdHJpY2guaW8iLCJhdWQiOlsiaHR0cHM6Ly9rYWxlaWRvc2NvcGljLW1vdXNzZS01YmVjNDkubmV0bGlmeS5hcHAvIl0sImlhdCI6MTczMTQ5MDE3MiwibmJmIjoxNzMxNDkwMTcyLCJjYXBhYmlsaXRpZXMiOnt9LCJ2ZXJzaW9uIjoxfQ.nt1dZbvE2ckvGnDH4kkQtCkDiUSLc9VwscCWGusfJ9s';
+const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNjgxZTliNS1jNjA1LTRjMmItYTU5My1mMDc0MTUzMTlhOGEiLCJpc3MiOiJzdHJpY2guaW8iLCJhdWQiOlsiaHR0cHM6Ly9rYWxlaWRvc2NvcGljLW1vdXNzZS01YmVjNDkubmV0bGlmeS5hcHAiXSwiaWF0IjoxNzMxNDkxMTA2LCJuYmYiOjE3MzE0OTExMDYsImNhcGFiaWxpdGllcyI6e30sInZlcnNpb24iOjF9.lXe9qOoSq4STE9KDpiZHqDHVHAbz7oPQQGoCKGFpX0o';
 
 type StrichScannerProps = {
     onDetected?: (detections: CodeDetection[]) => void;

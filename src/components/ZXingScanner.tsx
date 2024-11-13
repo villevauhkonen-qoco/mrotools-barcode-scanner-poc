@@ -10,7 +10,7 @@ const ZXingScanner: React.FC = () => {
     try {
       setIsScanning(true);
       const videoInputDevices = await codeReader.listVideoInputDevices();
-      const selectedDeviceId = videoInputDevices[0].deviceId;
+      const selectedDeviceId = videoInputDevices[1].deviceId;
       
       codeReader.decodeFromVideoDevice(
         selectedDeviceId,

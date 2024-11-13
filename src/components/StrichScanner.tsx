@@ -45,50 +45,76 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
     useEffect(() => {
         if (sdkInitialized && barcodeReaderRef.current === null) {
+            let mounted = true;
             const barcodeReader = new BarcodeReader({
                 selector: hostElemRef.current!,
                 engine: {
                     symbologies: [],
                     duplicateInterval: 2500
-                }
+                },
             });
             barcodeReaderRef.current = barcodeReader;
 
             const initBarcodeReader = async () => {
                 try {
                     await barcodeReader.initialize();
+                    
+                    if (!mounted) return;
+
                     barcodeReader.detected = (detections) => {
-                        setResult(detections[0].data);
-                        props.onDetected?.(detections);
-                        setIsScanning(false);
+                        if (detections && detections.length > 0) {
+                            setResult(detections[0].data);
+                            props.onDetected?.(detections);
+                            setIsScanning(false);
+                        }
                     };
-                    if (isScanning) {
+                    
+                    if (mounted && isScanning) {
                         await barcodeReader.start();
                     }
                 } catch (error) {
                     console.error('Failed to initialize barcode reader:', error);
-                    setIsScanning(false);
+                    if (mounted) {
+                        setIsScanning(false);
+                    }
                 }
             };
             initBarcodeReader();
 
             return () => {
-                barcodeReader.stop().then(() => {
-                    barcodeReaderRef.current?.destroy();
+                mounted = false;
+                const reader = barcodeReaderRef.current;
+                if (reader) {
                     barcodeReaderRef.current = null;
-                });
+                    
+                    (async () => {
+                        try {
+                            if (isScanning) {
+                                await reader.stop();
+                            }
+                            reader.destroy();
+                        } catch (e) {
+                            console.warn('Error during cleanup:', e);
+                        }
+                    })();
+                }
             };
         }
-    }, [sdkInitialized, props.onDetected, isScanning, props]);
+    }, [sdkInitialized, props.onDetected, isScanning]);
 
     const handleScanToggle = async () => {
+        if (!barcodeReaderRef.current) {
+            console.error('Barcode reader not initialized');
+            return;
+        }
+
         try {
             if (isScanning) {
-                await barcodeReaderRef.current?.stop();
                 setIsScanning(false);
+                await barcodeReaderRef.current.stop();
             } else {
-                await barcodeReaderRef.current?.start();
                 setIsScanning(true);
+                await barcodeReaderRef.current.start();
             }
         } catch (error) {
             console.error('Error toggling scanner:', error);

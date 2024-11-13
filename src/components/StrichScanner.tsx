@@ -47,7 +47,6 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
     useEffect(() => {
         if (sdkInitialized && barcodeReaderRef.current === null) {
             let mounted = true;
-            let currentStream: MediaStream | null = null;
 
             const barcodeReader = new BarcodeReader({
                 selector: hostElemRef.current!,
@@ -60,14 +59,6 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
             const initBarcodeReader = async () => {
                 try {
-                    if (currentStream) {
-                        currentStream.getTracks().forEach(track => track.stop());
-                    }
-
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    currentStream = stream;
-                    stream.getTracks().forEach(track => track.stop());
-
                     await barcodeReader.initialize();
 
                     if (!mounted) return;
@@ -100,9 +91,6 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
             return () => {
                 mounted = false;
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => track.stop());
-                }
                 const reader = barcodeReaderRef.current;
                 if (reader) {
                     barcodeReaderRef.current = null;

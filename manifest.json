@@ -1,0 +1,11 @@
+{
+  "name": "My Extension",
+  "version": "1.0",
+  "description": "A simple Chrome extension",
+  "permissions": [
+    "activeTab"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' https://cdn.strich.io; object-src 'self'"
+  }
+} 

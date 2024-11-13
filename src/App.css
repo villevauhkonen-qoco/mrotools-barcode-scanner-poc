@@ -1,0 +1,128 @@
+/* Add this at the top of your CSS file */
+.app {
+  border: 5px solid red !important;
+  background-color: rgb(239, 238, 255) !important;
+  color: black !important;
+}
+
+.tab-btn {
+  border: 3px solid blue !important;
+  padding: 20px !important;
+}
+
+/* Reset some basic elements */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Make root take full width */
+#root {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Update app container styles */
+.app {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff; /* Add background color to verify styles are loading */
+}
+
+/* Make tabs more visible */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%;
+  color: black !important;
+}
+
+/* Make buttons more distinct */
+.tab-btn {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  background: #e0e0e0;
+}
+
+.tab-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+
+.scanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.viewport {
+  width: 100%;
+  max-width: 640px;
+  height: 480px;
+  border: 2px solid #ccc;
+}
+
+.result {
+  margin-top: 20px;
+  padding: 10px;
+  background: #f0f0f0;
+  border-radius: 4px;
+}

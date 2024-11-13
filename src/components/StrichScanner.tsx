@@ -12,10 +12,8 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
     const hostElemRef = useRef(null);
     const barcodeReaderRef = useRef<BarcodeReader | null>(null);
     const [sdkInitialized, setSdkInitialized] = useState(StrichSDK.isInitialized());
-    const [result, setResult] = useState<string>('');
     const [isScanning, setIsScanning] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
-    const streamRef = useRef<MediaStream | null>(null);
 
     useImperativeHandle(ref, () => ({
         start: async () => {
@@ -30,14 +28,13 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
     useLayoutEffect(() => {
         const initializeSDK = async () => {
-            if (StrichSDK.isInitialized()) {
-                return;
-            }
+            if (StrichSDK.isInitialized()) return;
             try {
                 await StrichSDK.initialize(key);
                 setSdkInitialized(true);
             } catch (e) {
                 console.error(`Failed to initialize STRICH SDK: ${e}`);
+                setCameraError('Failed to initialize SDK');
             }
         };
 
@@ -48,184 +45,63 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
     useEffect(() => {
         if (sdkInitialized && barcodeReaderRef.current === null) {
-            let mounted = true;
+            const barcodeReader = new BarcodeReader({
+                selector: hostElemRef.current!,
+                engine: {
+                    symbologies: [],
+                    duplicateInterval: 2500,
+                },
+            });
+            
+            barcodeReaderRef.current = barcodeReader;
 
-            const initializeReader = async () => {
+            const initBarcodeReader = async () => {
                 try {
-                    // Stop any existing stream first
-                    if (streamRef.current) {
-                        streamRef.current.getTracks().forEach(track => track.stop());
-                        streamRef.current = null;
-                    }
+                    await barcodeReader.initialize();
+                    setCameraError(null);
 
-                    // First try with detailed constraints
-                    const constraints = {
-                        video: {
-                            facingMode: "environment",
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                            frameRate: { ideal: 30 }
+                    barcodeReader.detected = (detections) => {
+                        if (detections && detections.length > 0) {
+                            props.onDetected?.(detections);
+                            setIsScanning(false);
+                            toast.success('Barcode successfully scanned!');
                         }
                     };
 
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                        
-                        if (!mounted) {
-                            stream.getTracks().forEach(track => track.stop());
-                            return;
-                        }
-
-                        streamRef.current = stream;
-
-                        const barcodeReader = new BarcodeReader({
-                            selector: hostElemRef.current!,
-                            engine: {
-                                symbologies: [],
-                                duplicateInterval: 2500
-                            },
-                        });
-                        barcodeReaderRef.current = barcodeReader;
-
-                        const initBarcodeReader = async () => {
-                            try {
-                                await barcodeReader.initialize();
-
-                                if (!mounted) return;
-                                setCameraError(null);
-
-                                barcodeReader.detected = (detections) => {
-                                    if (detections && detections.length > 0) {
-                                        setResult(detections[0].data);
-                                        props.onDetected?.(detections);
-                                        setIsScanning(false);
-                                        toast.success('Barcode successfully scanned!');
-                                    }
-                                };
-
-                                if (mounted && isScanning) {
-                                    await barcodeReader.start();
-                                }
-                            } catch (error) {
-                                console.error('Failed to initialize barcode reader:', error);
-                                if (mounted) {
-                                    setIsScanning(false);
-                                    setCameraError(
-                                        error instanceof DOMException && error.name === 'NotAllowedError'
-                                            ? 'Camera permission denied. Please allow camera access and try again.'
-                                            : 'Unable to access camera. Make sure no other app or browser tab is using it.'
-                                    );
-                                }
-                            }
-                        };
-                        initBarcodeReader();
-                    } catch (error: unknown) {
-                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                        toast.error('Failed to initialize camera. Falling back to basic constraints.' + errorMessage);
-                        // Fallback to basic constraints if detailed ones fail
-                        const fallbackStream = await navigator.mediaDevices.getUserMedia({ 
-                            video: { facingMode: "environment" } 
-                        });
-                        if (!mounted) {
-                            fallbackStream.getTracks().forEach(track => track.stop());
-                            return;
-                        }
-                        streamRef.current = fallbackStream;
-
-                        const barcodeReader = new BarcodeReader({
-                            selector: hostElemRef.current!,
-                            engine: {
-                                symbologies: [],
-                                duplicateInterval: 2500
-                            },
-                        });
-                        barcodeReaderRef.current = barcodeReader;
-
-                        const initBarcodeReader = async () => {
-                            try {
-                                await barcodeReader.initialize();
-
-                                if (!mounted) return;
-                                setCameraError(null);
-
-                                barcodeReader.detected = (detections) => {
-                                    if (detections && detections.length > 0) {
-                                        setResult(detections[0].data);
-                                        props.onDetected?.(detections);
-                                        setIsScanning(false);
-                                        toast.success('Barcode successfully scanned!');
-                                    }
-                                };
-
-                                if (mounted && isScanning) {
-                                    await barcodeReader.start();
-                                }
-                            } catch (error) {
-                                console.error('Failed to initialize barcode reader:', error);
-                                if (mounted) {
-                                    setIsScanning(false);
-                                    setCameraError(
-                                        error instanceof DOMException && error.name === 'NotAllowedError'
-                                            ? 'Camera permission denied. Please allow camera access and try again.'
-                                            : 'Unable to access camera. Make sure no other app or browser tab is using it.'
-                                    );
-                                }
-                            }
-                        };
-                        initBarcodeReader();
+                    if (isScanning) {
+                        await barcodeReader.start();
                     }
                 } catch (error) {
-                    console.error('Failed to initialize camera:', error);
+                    console.error('Failed to initialize barcode reader:', error);
+                    setCameraError(
+                        error instanceof DOMException && error.name === 'NotAllowedError'
+                            ? 'Camera permission denied. Please allow camera access and try again.'
+                            : 'Unable to access camera. Make sure no other app or browser tab is using it.'
+                    );
+                    setIsScanning(false);
                 }
             };
 
-            initializeReader();
+            initBarcodeReader();
 
             return () => {
-                mounted = false;
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
-                    streamRef.current = null;
-                }
                 const reader = barcodeReaderRef.current;
                 if (reader) {
-                    barcodeReaderRef.current = null;
                     reader.detected = undefined;
-
-                    void (async () => {
-                        try {
-
-                            if (isScanning) {
-                                await reader.stop();
-                            }
-                            await reader.destroy();
-
-                        } catch (e) {
-                            console.warn('Error during cleanup:', e);
-                        }
-                    })();
+                    reader.destroy();
+                    barcodeReaderRef.current = null;
                 }
             };
         }
     }, [sdkInitialized, props.onDetected, isScanning, props]);
 
     const handleScanToggle = async () => {
-        if (!barcodeReaderRef.current) {
-            console.error('Barcode reader not initialized');
-            return;
-        }
-
-        try {
-            if (isScanning) {
-                setIsScanning(false);
-                await barcodeReaderRef.current.stop();
-            } else {
-                setIsScanning(true);
-                await barcodeReaderRef.current.start();
-            }
-        } catch (error) {
-            console.error('Error toggling scanner:', error);
+        if (isScanning) {
+            await barcodeReaderRef.current?.stop();
             setIsScanning(false);
+        } else {
+            setIsScanning(true);
+            await barcodeReaderRef.current?.start();
         }
     };
 
@@ -242,11 +118,6 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
             {cameraError && (
                 <div className="error" style={{ color: 'red', marginTop: '10px' }}>
                     {cameraError}
-                </div>
-            )}
-            {result && (
-                <div className="result">
-                    Scanned Code: {result}
                 </div>
             )}
         </div>

@@ -50,10 +50,13 @@ const ZXingScanner: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (result: any, err: Error | undefined) => {
           if (result) {
-            setResult(result.getText());
+            const scannedText = result.getText();
+            setResult(scannedText);
             setError('');
             stopScanning();
-            toast.success('Barcode successfully scanned!');
+            toast.success(`Scanned: ${scannedText}`, {
+              duration: 5000, // 5 seconds
+            });
           }
           if (err) {
             if (err.name === 'NotFoundException') {

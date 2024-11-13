@@ -33,7 +33,9 @@ const QuaggaScanner: React.FC = () => {
       Quagga.onDetected((result) => {
         if (result.codeResult.code) {
           setResult(result.codeResult.code);
-          toast.success(`Successfully scanned code: ${result.codeResult.code}`);
+          toast.success(`Successfully scanned code: ${result.codeResult.code}`, {
+            duration: 5000
+          });
           stopScanning();
         }
       });

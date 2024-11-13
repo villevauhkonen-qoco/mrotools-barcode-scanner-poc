@@ -13,6 +13,7 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
     const [sdkInitialized, setSdkInitialized] = useState(StrichSDK.isInitialized());
     const [result, setResult] = useState<string>('');
     const [isScanning, setIsScanning] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
 
     useImperativeHandle(ref, () => ({
         start: async () => {
@@ -46,6 +47,8 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
     useEffect(() => {
         if (sdkInitialized && barcodeReaderRef.current === null) {
             let mounted = true;
+            let currentStream: MediaStream | null = null;
+
             const barcodeReader = new BarcodeReader({
                 selector: hostElemRef.current!,
                 engine: {
@@ -57,9 +60,18 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
             const initBarcodeReader = async () => {
                 try {
+                    if (currentStream) {
+                        currentStream.getTracks().forEach(track => track.stop());
+                    }
+
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    currentStream = stream;
+                    stream.getTracks().forEach(track => track.stop());
+
                     await barcodeReader.initialize();
-                    
+
                     if (!mounted) return;
+                    setCameraError(null);
 
                     barcodeReader.detected = (detections) => {
                         if (detections && detections.length > 0) {
@@ -68,7 +80,7 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
                             setIsScanning(false);
                         }
                     };
-                    
+
                     if (mounted && isScanning) {
                         await barcodeReader.start();
                     }
@@ -76,6 +88,11 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
                     console.error('Failed to initialize barcode reader:', error);
                     if (mounted) {
                         setIsScanning(false);
+                        setCameraError(
+                            error instanceof DOMException && error.name === 'NotAllowedError'
+                                ? 'Camera permission denied. Please allow camera access and try again.'
+                                : 'Unable to access camera. Make sure no other app or browser tab is using it.'
+                        );
                     }
                 }
             };
@@ -83,16 +100,22 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
 
             return () => {
                 mounted = false;
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
                 const reader = barcodeReaderRef.current;
                 if (reader) {
                     barcodeReaderRef.current = null;
-                    
-                    (async () => {
+                    reader.detected = undefined;
+
+                    void (async () => {
                         try {
+
                             if (isScanning) {
                                 await reader.stop();
                             }
-                            reader.destroy();
+                            await reader.destroy();
+
                         } catch (e) {
                             console.warn('Error during cleanup:', e);
                         }
@@ -100,7 +123,7 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
                 }
             };
         }
-    }, [sdkInitialized, props.onDetected, isScanning]);
+    }, [sdkInitialized, props.onDetected, isScanning, props]);
 
     const handleScanToggle = async () => {
         if (!barcodeReaderRef.current) {
@@ -125,10 +148,18 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
     return (
         <div className="scanner">
             <h1>STRICH</h1>
-            <button onClick={handleScanToggle}>
+            <button
+                onClick={handleScanToggle}
+                disabled={!!cameraError}
+            >
                 {isScanning ? 'Stop Scanning' : 'Start Scanning'}
             </button>
             <div ref={hostElemRef} className="viewport" style={{ position: 'relative' }} />
+            {cameraError && (
+                <div className="error" style={{ color: 'red', marginTop: '10px' }}>
+                    {cameraError}
+                </div>
+            )}
             {result && (
                 <div className="result">
                     Scanned Code: {result}

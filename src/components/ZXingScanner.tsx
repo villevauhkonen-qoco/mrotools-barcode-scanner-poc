@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/library'
 
 const ZXingScanner: React.FC = () => {
@@ -7,38 +7,53 @@ const ZXingScanner: React.FC = () => {
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const codeReader = new BrowserMultiFormatReader();
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
 
   useEffect(() => {
+    codeReaderRef.current = new BrowserMultiFormatReader();
+    
     const loadDevices = async () => {
       try {
-        const devices = await codeReader.listVideoInputDevices();
+        const devices = await codeReaderRef.current!.listVideoInputDevices();
         setVideoDevices(devices);
         if (devices.length > 0) {
           setSelectedDevice(devices[0].deviceId);
         }
       } catch (err) {
         console.error(err);
+        setError('Failed to list video devices');
       }
     };
+    
     loadDevices();
+
+    return () => {
+      if (codeReaderRef.current) {
+        try {
+          codeReaderRef.current.reset();
+          codeReaderRef.current = null;
+        } catch (err) {
+          console.warn('Error during cleanup:', err);
+        }
+      }
+    };
   }, []);
 
   const startScanning = async () => {
     try {
       setIsScanning(true);
-      setError(''); // Clear any previous errors
-      codeReader.decodeFromVideoDevice(
+      setError('');
+      codeReaderRef.current?.decodeFromVideoDevice(
         selectedDevice,
         'video-element',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (result: any, err: Error | undefined) => {
           if (result) {
             setResult(result.getText());
-            setError(''); // Clear error message on successful scan
+            setError('');
             stopScanning();
           }
           if (err) {
-            // Only show meaningful errors to user
             if (err.name === 'NotFoundException') {
               setError('Searching for QR code...');
             } else if (!(err instanceof TypeError)) {
@@ -55,15 +70,11 @@ const ZXingScanner: React.FC = () => {
   };
 
   const stopScanning = () => {
-    codeReader.reset();
+    if (codeReaderRef.current) {
+      codeReaderRef.current.reset();
+    }
     setIsScanning(false);
   };
-
-  useEffect(() => {
-    return () => {
-      codeReader.reset();
-    };
-  }, []);
 
   return (
     <div className="scanner">

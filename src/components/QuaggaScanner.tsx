@@ -45,9 +45,12 @@ const QuaggaScanner: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      Quagga.stop();
+      if (isScanning) {
+        Quagga.stop();
+      }
+      Quagga.offDetected();
     };
-  }, []);
+  }, [isScanning]);
 
   return (
     <div className="scanner">

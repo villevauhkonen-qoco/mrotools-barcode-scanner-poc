@@ -7,11 +7,10 @@ const ZXingScanner: React.FC = () => {
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const codeReaderRef = useRef<typeof BrowserMultiFormatReader | null>(null);
 
   useEffect(() => {
     codeReaderRef.current = new BrowserMultiFormatReader();
-    
     const loadDevices = async () => {
       try {
         const devices = await codeReaderRef.current!.listVideoInputDevices();

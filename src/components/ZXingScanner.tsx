@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/library'
+import toast from 'react-hot-toast';
 
 const ZXingScanner: React.FC = () => {
   const [result, setResult] = useState<string>('');
@@ -11,6 +12,7 @@ const ZXingScanner: React.FC = () => {
 
   useEffect(() => {
     codeReaderRef.current = new BrowserMultiFormatReader();
+    
     const loadDevices = async () => {
       try {
         const devices = await codeReaderRef.current!.listVideoInputDevices();
@@ -51,6 +53,7 @@ const ZXingScanner: React.FC = () => {
             setResult(result.getText());
             setError('');
             stopScanning();
+            toast.success('Barcode successfully scanned!');
           }
           if (err) {
             if (err.name === 'NotFoundException') {

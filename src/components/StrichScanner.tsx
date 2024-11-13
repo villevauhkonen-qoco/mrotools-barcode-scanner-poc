@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { BarcodeReader, StrichSDK, CodeDetection } from '@pixelverse/strichjs-sdk';
+import toast from 'react-hot-toast';
 
 const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNjgxZTliNS1jNjA1LTRjMmItYTU5My1mMDc0MTUzMTlhOGEiLCJpc3MiOiJzdHJpY2guaW8iLCJhdWQiOlsiaHR0cHM6Ly9rYWxlaWRvc2NvcGljLW1vdXNzZS01YmVjNDkubmV0bGlmeS5hcHAiXSwiaWF0IjoxNzMxNDkxMTA2LCJuYmYiOjE3MzE0OTExMDYsImNhcGFiaWxpdGllcyI6e30sInZlcnNpb24iOjF9.lXe9qOoSq4STE9KDpiZHqDHVHAbz7oPQQGoCKGFpX0o';
 
@@ -89,6 +90,7 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
                                     setResult(detections[0].data);
                                     props.onDetected?.(detections);
                                     setIsScanning(false);
+                                    toast.success('Barcode successfully scanned!');
                                 }
                             };
 

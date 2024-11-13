@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Quagga from '@ericblade/quagga2';
+import toast from 'react-hot-toast';
 
 const QuaggaScanner: React.FC = () => {
   const [result, setResult] = useState<string>('');
@@ -32,6 +33,7 @@ const QuaggaScanner: React.FC = () => {
       Quagga.onDetected((result) => {
         if (result.codeResult.code) {
           setResult(result.codeResult.code);
+          toast.success(`Successfully scanned code: ${result.codeResult.code}`);
           stopScanning();
         }
       });

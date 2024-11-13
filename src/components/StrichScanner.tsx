@@ -119,7 +119,9 @@ const StrichScanner = forwardRef((props: StrichScannerProps, ref) => {
                             }
                         };
                         initBarcodeReader();
-                    } catch (error) {
+                    } catch (error: unknown) {
+                        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                        toast.error('Failed to initialize camera. Falling back to basic constraints.' + errorMessage);
                         // Fallback to basic constraints if detailed ones fail
                         const fallbackStream = await navigator.mediaDevices.getUserMedia({ 
                             video: { facingMode: "environment" } 

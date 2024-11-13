@@ -9,6 +9,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
+      <h2>Barcode Scanner 5000</h2>
       <div className="tabs">
         <button 
           className={`tab-btn ${activeTab === 'quagga' ? 'active' : ''}`}
